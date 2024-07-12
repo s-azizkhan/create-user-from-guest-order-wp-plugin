@@ -196,9 +196,8 @@ class Create_User_From_Guest_Order
     /**
      * Deactivate function that deletes specific options related to user notification and settings.
      */
-    public function deactivate()
+    public static function deactivate()
     {
-        error_log('deletedddd');
         delete_option('_create_user_from_guest_order_send_user_notification_email');
         delete_option('_create_user_from_guest_order_enable');
         delete_option('_create_user_from_guest_order_settings');
