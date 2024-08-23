@@ -26,9 +26,9 @@ if (!defined('WPINC')) {
     die;
 }
 
-define("CREATE_USER_FROM_GUEST_ORDER_VERSION", "1.0");
+define("CUFGO_VERSION", "1.0");
 
-class Create_User_From_Guest_Order
+class CUFGO_User_From_Guest_Order
 {
     /**
      * CreateUserFromGuestOrder constructor.
@@ -56,7 +56,7 @@ class Create_User_From_Guest_Order
      */
     public static function isFeatureEnabled(): bool
     {
-        return get_option('_create_user_from_guest_order_enable') == 'yes' ? true : false;
+        return get_option('cufgo_enable') == 'yes' ? true : false;
     }
 
     /**
@@ -66,7 +66,7 @@ class Create_User_From_Guest_Order
      */
     public static function isNotificationEnabled(): bool
     {
-        return get_option('_create_user_from_guest_order_send_user_notification_email') == 'yes' ? true : false;
+        return get_option('cufgo_send_user_notification_email') == 'yes' ? true : false;
     }
 
     /**
@@ -78,33 +78,33 @@ class Create_User_From_Guest_Order
     public function createUserFromGuestOrderSettings($settings)
     {
         $settings[] = array(
-            'title' => __('Create User From Guest Order', 'woocommerce'),
-            'desc' => __('Map existing user to guest order or Create new user while creating/updating guest order, ( Billing email used in validation ) imp: This will work when order created by Admin', 'woocommerce'),
+            'title' => __('Create User From Guest Order', 'create-user-from-guest-order'),
+            'desc' => __('Map existing user to guest order or Create new user while creating/updating guest order, ( Billing email used in validation ) imp: This will work when order created by Admin', 'create-user-from-guest-order'),
             'type' => 'title',
-            'id' => '_create_user_from_guest_order_settings',
+            'id' => 'cufgo_settings',
         );
 
         // Enable the feature checkbox
         $settings[] = array(
-            'title' => __('Enable Create User From Guest Order', 'woocommerce'),
-            'desc' => __('Check this to enable user creation on guest order', 'woocommerce'),
-            'id' => '_create_user_from_guest_order_enable',
+            'title' => __('Enable Create User From Guest Order', 'create-user-from-guest-order'),
+            'desc' => __('Check this to enable user creation on guest order', 'create-user-from-guest-order'),
+            'id' => 'cufgo_enable',
             'type' => 'checkbox',
             'default' => 'no',
         );
 
         // Send User Notification Email when user is created checkbox
         $settings[] = array(
-            'title' => __('Send User Notification Email when user is created', 'woocommerce'),
-            'desc' => __('Check this to send user notification email when user is created', 'woocommerce'),
-            'id' => '_create_user_from_guest_order_send_user_notification_email',
+            'title' => __('Send User Notification Email when user is created', 'create-user-from-guest-order'),
+            'desc' => __('Check this to send user notification email when user is created', 'create-user-from-guest-order'),
+            'id' => 'cufgo_send_user_notification_email',
             'type' => 'checkbox',
             'default' => 'no',
         );
 
         $settings[] = array(
             'type' => 'sectionend',
-            'id' => '_create_user_from_guest_order_settings',
+            'id' => 'cufgo_settings',
         );
         return $settings;
     }
@@ -198,13 +198,13 @@ class Create_User_From_Guest_Order
      */
     public static function deactivate()
     {
-        delete_option('_create_user_from_guest_order_send_user_notification_email');
-        delete_option('_create_user_from_guest_order_enable');
-        delete_option('_create_user_from_guest_order_settings');
+        delete_option('cufgo_send_user_notification_email');
+        delete_option('cufgo_enable');
+        delete_option('cufgo_settings');
     }
 }
 
-register_deactivation_hook(__FILE__, array(Create_User_From_Guest_Order::class, 'deactivate'));
+register_deactivation_hook(__FILE__, array(CUFGO_User_From_Guest_Order::class, 'deactivate'));
 
 /**
  * Begins execution of the plugin.
@@ -215,12 +215,12 @@ register_deactivation_hook(__FILE__, array(Create_User_From_Guest_Order::class, 
  *
  * @since    1.0.0
  */
-function run_Create_User_From_Guest_Order()
+function cufgo_init()
 {
     // Initialize the plugin
-    if (class_exists('Create_User_From_Guest_Order')) {
-        new Create_User_From_Guest_Order();
+    if (class_exists('CUFGO_User_From_Guest_Order')) {
+        new CUFGO_User_From_Guest_Order();
     }
 }
 
-run_Create_User_From_Guest_Order();
+cufgo_init();
