@@ -18,7 +18,7 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       create-user-from-guest-order
- * Requires Plugins:  woocommerce,
+ * Requires Plugins:  woocommerce
  */
 
 // If this file is called directly, abort.
@@ -128,7 +128,6 @@ class CUFGO_User_From_Guest_Order
                 }
             }
         } catch (Throwable $e) {
-            error_log('Error loading ' . __FUNCTION__ . ' : ' . $e->getMessage());
             return false;
         }
     }
