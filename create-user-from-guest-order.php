@@ -12,7 +12,7 @@
  * Plugin Name:       Create User From Guest Order
  * Plugin URI:        https://github.com/s-azizkhan/create-user-from-guest-order-wp-plugin
  * Description:       Automatically creates a user from a guest order in WooCommerce.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Aziz Khan
  * Author URI:        https://github.com/s-azizkhan
  * License:           GPL-2.0+
