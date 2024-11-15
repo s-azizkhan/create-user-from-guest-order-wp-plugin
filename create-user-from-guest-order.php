@@ -38,6 +38,11 @@ class CUFGO_User_From_Guest_Order
         add_action('init', array($this, 'run'));
     }
 
+    /**
+     * Run all the attached hook
+     * 
+     * @version 1.0.1
+     */
     public function run()
     {
         // Add settings to the WooCommerce settings general tab for enable and disable the feature
@@ -47,6 +52,8 @@ class CUFGO_User_From_Guest_Order
         add_action('woocommerce_new_order', array($this, 'createUserFromGuestOrder'), 10, 1);
         // Create user from guest order when admin update the order
         add_action('woocommerce_process_shop_order_meta', array($this, 'createUserFromGuestOrder'), 999, 1);
+        // Handle account past order mapping
+        add_action('user_register', array($this, 'linkPastOrdersToUser'), 10, 1); // @since 1.0.1
     }
 
     /**
@@ -196,6 +203,60 @@ class CUFGO_User_From_Guest_Order
             // update order
             $order->set_customer_id($customer_id);
             $order->save();
+        }
+    }
+
+    /**
+     * Link past orders to the user based on email.
+     *
+     * @param int $user_id
+     * @since 1.0.1
+     */
+    public function linkPastOrdersToUser($user_id)
+    {
+        // Get user data
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return;
+        }
+
+        // Get user email
+        $user_email = $user->user_email;
+
+        // Query for guest orders with matching email
+        $args = array(
+            'post_type' => 'shop_order',
+            'post_status' => array_keys(wc_get_order_statuses()),
+            'meta_query' => array(
+                array(
+                    'key' => '_billing_email',
+                    'value' => $user_email,
+                    'compare' => '='
+                ),
+                array(
+                    'key' => '_customer_user',
+                    'value' => 0, // Guest orders
+                    'compare' => '='
+                )
+            )
+        );
+
+        $query = new WP_Query($args);
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+
+                $order_id = get_the_ID();
+                $order = wc_get_order($order_id);
+
+                if ($order) {
+                    // Link order to user
+                    $order->set_customer_id($user_id);
+                    $order->save();
+                }
+            }
+            wp_reset_postdata();
         }
     }
 
