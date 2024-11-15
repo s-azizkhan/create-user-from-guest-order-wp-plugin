@@ -26,7 +26,7 @@ if (!defined('WPINC')) {
     die;
 }
 
-define("CUFGO_VERSION", "1.0");
+define("CUFGO_VERSION", "1.0.1");
 
 class CUFGO_User_From_Guest_Order
 {
@@ -74,9 +74,15 @@ class CUFGO_User_From_Guest_Order
      *
      * @param array $settings
      * @return array
+     * @version 1.0.1
      */
     public function createUserFromGuestOrderSettings($settings)
     {
+        // check for permission
+        if(!current_user_can('manage_woocommerce')) {
+            return $settings;
+        }
+
         $settings[] = array(
             'title' => __('Create User From Guest Order', 'create-user-from-guest-order'),
             'desc' => __('Map existing user to guest order or Create new user while creating/updating guest order, ( Billing email used in validation ) imp: This will work when order created by Admin', 'create-user-from-guest-order'),
@@ -113,12 +119,13 @@ class CUFGO_User_From_Guest_Order
      * Create user from guest order
      *
      * @param int $order_id
+     * @version 1.0.1
      */
     public function createUserFromGuestOrder($order_id)
     {
         try {
             // Check if the feature is enabled and continue
-            if (self::isFeatureEnabled() && is_admin()) {
+            if (self::isFeatureEnabled()) {
                 $order = wc_get_order($order_id);
                 //get customer ID
                 $customer_id = $order->get_customer_id();
