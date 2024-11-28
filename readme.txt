@@ -33,7 +33,7 @@ The "Create User From Guest Order" plugin automatically creates an user account 
 == Usage ==
 
 1. **Enable the Feature:**
-   - Go to `WooCommerce` -> `Settings` -> `General`. It can be reached from `Settings` at plugins listing page.
+   - Go to `WooCommerce` -> `Settings` -> `General`. It can also be reached from `Settings` at plugins listing page.
    - Enable the checkbox for "Enable Create User From Guest Order".
    - Optionally, enable the checkbox for "Send User Notification Email when user is created".
 
