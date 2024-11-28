@@ -57,7 +57,7 @@ A: Yes, you can disable the notification email by unchecking the "Send User Noti
 
 ## Changelog
 
-###1.0.1 2024-11-30
+### 1.0.1 2024-11-30
 - Improvement: Manually create user from order details.
 - Improvement: At plugins page, added a direct link to our settings page.
 
