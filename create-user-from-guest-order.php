@@ -59,7 +59,7 @@ class CUFGO_User_From_Guest_Order
         // AJAX processing for user creation.
         add_action( 'wp_ajax_cufgo_maybe_create_user', array( $this, 'maybeCreateUser') );
 
-        // easy link to our settings page
+        // Easy link to our settings page.
         add_filter( 'plugin_action_links_create-user-from-guest-order-wp-plugin/create-user-from-guest-order.php', array( $this, 'pluginActionLinks' ) );
 
     }
