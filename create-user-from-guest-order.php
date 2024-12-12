@@ -21,7 +21,7 @@
  * Requires Plugins:  woocommerce
  * 
  * WC requires at least: 5.0
- * WC tested up to: 9.4.2
+ * WC tested up to: 9.4.3
  * 
  */
 
@@ -54,13 +54,13 @@ class CUFGO_User_From_Guest_Order
         add_action('woocommerce_process_shop_order_meta', array($this, 'createUserFromGuestOrder'), 999, 1);
 
         // Maybe show a button to create an user.
-        add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'maybe_show_create_user_button' ) );
+        add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'maybeShowCreateUserButton' ) );
 
         // AJAX processing for user creation.
-        add_action( 'wp_ajax_cufgo_maybe_create_user', array( $this, 'maybe_create_user') );
+        add_action( 'wp_ajax_cufgo_maybe_create_user', array( $this, 'maybeCreateUser') );
 
         // easy link to our settings page
-        add_filter( 'plugin_action_links_create-user-from-guest-order-wp-plugin/create-user-from-guest-order.php', array( $this, 'plugin_action_links' ) );
+        add_filter( 'plugin_action_links_create-user-from-guest-order-wp-plugin/create-user-from-guest-order.php', array( $this, 'pluginActionLinks' ) );
 
     }
 
@@ -68,8 +68,10 @@ class CUFGO_User_From_Guest_Order
      * Add a link to our settings page at plugins listing page.
      * @param  array $links
      * @return array
+     * 
+     * @since 1.0.1
      */
-    public function plugin_action_links( $links ) {
+    public function pluginActionLinks( $links ) {
 
         $plugin_links = array( '<a href="' .  admin_url( 'admin.php?page=wc-settings' ) . '">' . esc_html__( 'Settings', 'create-user-from-guest-order' ) . '</a>' );
 
@@ -81,8 +83,9 @@ class CUFGO_User_From_Guest_Order
      * Show create user button if order customer does not exist.
      *
      * @param WC_Order $order
+     * @since 1.0.1
      */
-    public static function maybe_show_create_user_button( $order ) {
+    public static function maybeShowCreateUserButton( $order ) {
 
         if ( self::isFeatureEnabled() ) {
 
@@ -99,7 +102,12 @@ class CUFGO_User_From_Guest_Order
         }
     }
 
-    public function maybe_create_user() {
+    /**
+     * Maybe create user.
+     * 
+     * @since 1.0.1
+     */
+    public function maybeCreateUser() {
 
         if ( ! is_admin() ) {
             wp_die( esc_html__('Error. Not at admin panel.', 'create-user-from-guest-order' ) );
