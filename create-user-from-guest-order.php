@@ -85,7 +85,7 @@ class CUFGO_User_From_Guest_Order
      * @param WC_Order $order
      * @since 1.0.1
      */
-    public static function maybeShowCreateUserButton( $order ) {
+    public function maybeShowCreateUserButton( $order ) {
 
         if ( self::isFeatureEnabled() ) {
 
