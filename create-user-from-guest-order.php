@@ -13,12 +13,16 @@
  * Plugin URI:        https://github.com/s-azizkhan/create-user-from-guest-order-wp-plugin
  * Description:       Automatically creates a user from a guest order in WooCommerce.
  * Version:           1.0.1
- * Author:            Aziz Khan
+ * Author:            <a href="https://github.com/s-azizkhan">Aziz Khan</a>, <a href="https://github.com/greguly">Gabriel Reguly</a>
  * Author URI:        https://github.com/s-azizkhan
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       create-user-from-guest-order
  * Requires Plugins:  woocommerce
+ * 
+ * WC requires at least: 5.0
+ * WC tested up to: 9.4.3
+ * 
  */
 
 // If this file is called directly, abort.
@@ -50,11 +54,97 @@ class CUFGO_User_From_Guest_Order
 
         // Create user from guest order
         add_action('woocommerce_new_order', array($this, 'createUserFromGuestOrder'), 10, 1);
+
         // Create user from guest order when admin update the order
         add_action('woocommerce_process_shop_order_meta', array($this, 'createUserFromGuestOrder'), 999, 1);
         // Handle account past order mapping
         add_action('user_register', array($this, 'linkPastOrdersToUser'), 10, 1); // @since 1.0.1
+
+        // Maybe show a button to create an user.
+        add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'maybeShowCreateUserButton' ) );
+
+        // AJAX processing for user creation.
+        add_action( 'wp_ajax_cufgo_maybe_create_user', array( $this, 'maybeCreateUser') );
+
+        // Easy link to our settings page.
+        add_filter( 'plugin_action_links_create-user-from-guest-order-wp-plugin/create-user-from-guest-order.php', array( $this, 'pluginActionLinks' ) );
+
     }
+
+    /**
+     * Add a link to our settings page at plugins listing page.
+     * @param  array $links
+     * @return array
+     * 
+     * @since 1.0.1
+     */
+    public function pluginActionLinks( $links ) {
+
+        $plugin_links = array( '<a href="' .  admin_url( 'admin.php?page=wc-settings' ) . '">' . esc_html__( 'Settings', 'create-user-from-guest-order' ) . '</a>' );
+
+        return array_merge( $plugin_links, $links );
+    }
+
+
+    /**
+     * Show create user button if order customer does not exist.
+     *
+     * @param WC_Order $order
+     * @since 1.0.1
+     */
+    public function maybeShowCreateUserButton( $order ) {
+
+        if ( self::isFeatureEnabled() ) {
+
+            $customer_id = $order->get_customer_id();
+            $user        = get_user_by( 'id', $customer_id );
+            if ( ! $user ) {
+
+                printf( '<p class="form-field form-field-wide" ><a href="%s" class="button woocommerce_order_action_create_user">%s</a></p>',
+                        wp_nonce_url( admin_url( 'admin-ajax.php?action=cufgo_maybe_create_user&order_id=' . $order->get_id()  ), 'create_user_action' ),
+                        esc_html__( 'Create user from order details.', 'create-user-from-guest-order' ) );
+
+
+            }
+        }
+    }
+
+    /**
+     * Maybe create user.
+     * 
+     * @since 1.0.1
+     */
+    public function maybeCreateUser() {
+
+        if ( ! is_admin() ) {
+            wp_die( esc_html__('Error. Not at admin panel.', 'create-user-from-guest-order' ) );
+        }
+
+        if ( ! current_user_can( 'edit_shop_orders' ) ) {
+            wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'create-user-from-guest-order' ) );
+        }
+
+        if ( ! check_admin_referer( 'create_user_action' ) ) {
+            wp_die( esc_html__( 'You have taken too long. Please go back and retry.', 'create-user-from-guest-order' ) );
+        }
+
+        $order_id = isset( $_GET['order_id'] ) && (int) $_GET['order_id'] ? (int) $_GET['order_id'] : '';
+        if ( ! $order_id ) {
+            wp_die( esc_html__( 'Empty order id.', 'create-user-from-guest-order' ) );
+        }
+
+        $order = wc_get_order( $order_id );
+        if ( ! $order ) {
+            wp_die( esc_html__( 'Could not load order.', 'create-user-from-guest-order' ) );    
+        }
+
+        self::createUser( $order );
+
+        wp_redirect( wp_get_referer() );
+        exit;
+    }
+
+
 
     /**
      * Check if the feature to create a user from a guest order is enabled.
