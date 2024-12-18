@@ -9,7 +9,7 @@ Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Automatically creates an user from a guest order in WooCommerce. Button to manually create an user from order details.
+Auto-creates users from guest WooCommerce orders. Adds manual user creation button. Maps existing orders to users on registration.
 
 == Description ==
 
@@ -21,6 +21,7 @@ The "Create User From Guest Order" plugin automatically creates an user account 
 * Option to send a notification email to the newly created user.
 * Configurable settings in WooCommerce General settings tab.
 * NEW FEATURE: Button to manually create an user account from order details.
+* NEW FEATURE: When a user register, check if they have any existing guest orders with the user email. If yes, link all the previous orders to the user.
 
 == Installation ==
 
@@ -56,16 +57,17 @@ Yes, you can disable the notification email by unchecking the "Send User Notific
 
 == Changelog ==
 
-= 1.0.1 2024-11-30 =
+= 1.0.1 2024-12-13 =
 * Improvement: Manually create user from order details.
 * Improvement: At plugins page, added a direct link to our settings page.
+* Improvement: When a user register, check if they have any existing guest orders with the user email. If yes, link all the previous orders to the user.
 
 = 1.0 =
 * Initial release.
 
 == Upgrade Notice ==
 
-= 1.0.1 2024-11-30 =
+= 1.0.1 2024-12-13 =
 * Improvements: upgrade safe, no breaking changes.
 
 = 1.0 =
