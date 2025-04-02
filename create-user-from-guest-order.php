@@ -13,7 +13,7 @@
  * Plugin URI:        https://github.com/s-azizkhan/create-user-from-guest-order-wp-plugin
  * Description:       Automatically creates a user from a guest order in WooCommerce.
  * Version:           1.0.2
- * Author:            <a href="https://github.com/s-azizkhan">Aziz Khan</a>, <a href="https://github.com/greguly">Gabriel Reguly</a>
+ * Author:            <a href="https://github.com/s-azizkhan">Aziz Khan</a>
  * Author URI:        https://github.com/s-azizkhan
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
@@ -109,7 +109,7 @@ class CUFGO_User_From_Guest_Order
     {
         $plugin_links = [
             '<a href="' .
-            admin_url("admin.php?page=wc-settings&tab=accounts") .
+            admin_url("admin.php?page=wc-settings&tab=account") .
             '">' .
             esc_html__("Settings", "create-user-from-guest-order") .
             "</a>",
