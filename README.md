@@ -1,13 +1,13 @@
 # Create User From Guest Order
 
-**Contributors:** S.Aziz Khan 
-**Tags:** woocommerce, user creation, guest order  
-**Requires at least:** 5.0  
-**Tested up to:** 6.7.1  
-**Requires PHP:** 7.2  
-**Stable tag:** 1.0.1  
-**License:** GPLv2 or later  
-**License URI:** http://www.gnu.org/licenses/gpl-2.0.html  
+**Contributors:** S.Aziz Khan
+**Tags:** woocommerce, user creation, guest order
+**Requires at least:** 5.0
+**Tested up to:** 6.8
+**Requires PHP:** 7.2
+**Stable tag:** 1.0.2
+**License:** GPLv2 or later
+**License URI:** http://www.gnu.org/licenses/gpl-2.0.html
 
 Auto-creates users from guest WooCommerce orders. Adds manual user creation button. Maps existing orders to users on registration.
 
@@ -22,6 +22,7 @@ The "Create User From Guest Order" plugin automatically creates an user account 
 - Configurable settings in WooCommerce General settings tab.
 - NEW FEATURE: Button to manually create an user account from order details
 - NEW FEATURE: When a user register, check if they have any existing guest orders with the user email. If yes, link all the previous orders to the user.
+- NEW FEATURE: Support WooCommerce 6.8 with HPOS feature.
 
 
 ## Installation
@@ -57,7 +58,13 @@ A: No, this plugin only creates a user account for guest orders. If the email al
 ### Q: Can I disable the notification email sent to new users?
 A: Yes, you can disable the notification email by unchecking the "Send User Notification Email when user is created" option in the WooCommerce General settings tab.
 
+### Q: Is this support WooCommerce HPOC (High-Performance Order Storage) feature?
+A: Yes, this plugin supports WooCommerce HPOC (High-Performance Order Storage) feature out of the box (from 1.0.2v).
+
 ## Changelog
+
+### 1.0.2 (2025-04-02)
+- New Feature: Added support for WooCommerce 6.8 with HPOS feature.
 
 ### 1.0.1 (2024-12-13)
 - Improvement: Manually create user from order details.
@@ -82,5 +89,5 @@ This plugin is licensed under the GPLv2 or later. For more information, see [GPL
 
 ## Author
 
-**Author:** S.Aziz Khan  
+**Author:** S.Aziz Khan
 **Author URI:** [https://github.com/s-azizkhan](https://github.com/s-azizkhan)
