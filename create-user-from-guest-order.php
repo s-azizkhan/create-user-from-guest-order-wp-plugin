@@ -49,8 +49,8 @@ class CUFGO_User_From_Guest_Order
      */
     public function run()
     {
-        // Add settings to the WooCommerce settings general tab for enable and disable the feature
-        add_filter("woocommerce_general_settings", [
+        // Add settings to the WooCommerce settings "Accounts & Privacy" tab for enable and disable the feature
+        add_filter("woocommerce_account_settings", [
             $this,
             "createUserFromGuestOrderSettings",
         ]);
@@ -109,7 +109,7 @@ class CUFGO_User_From_Guest_Order
     {
         $plugin_links = [
             '<a href="' .
-            admin_url("admin.php?page=wc-settings") .
+            admin_url("admin.php?page=wc-settings&tab=accounts") .
             '">' .
             esc_html__("Settings", "create-user-from-guest-order") .
             "</a>",
