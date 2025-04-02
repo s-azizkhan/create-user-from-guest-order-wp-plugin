@@ -3,7 +3,7 @@ Contributors: aziz22
 Donate link: https://github.com/s-azizkhan
 Tags: woocommerce, user creation, guest order
 Requires at least: 5.0
-Tested up to: 6.7.1
+Tested up to: 6.8
 Requires PHP: 7.2
 Stable tag: 1.0.1
 License: GPLv2 or later
@@ -22,6 +22,7 @@ The "Create User From Guest Order" plugin automatically creates an user account 
 * Configurable settings in WooCommerce General settings tab.
 * NEW FEATURE: Button to manually create an user account from order details.
 * NEW FEATURE: When a user register, check if they have any existing guest orders with the user email. If yes, link all the previous orders to the user.
+* NEW FEATURE: Support for WooCommerce HPOC (High-Performance Order Storage) feature
 
 == Installation ==
 
@@ -55,7 +56,14 @@ No, this plugin only creates a user account for guest orders. If the email alrea
 
 Yes, you can disable the notification email by unchecking the "Send User Notification Email when user is created" option in the WooCommerce General settings tab.
 
+= Is this support WooCommerce HPOC (High-Performance Order Storage) feature? =
+
+Yes, this plugin supports WooCommerce HPOC (High-Performance Order Storage) feature out of the box [from 1.0.2v].
+
 == Changelog ==
+
+= 1.0.2 2025-04-02 =
+* Fix: Fixed an issue where the user was not created when the guest order was placed using the WooCommerce HPOC (High-Performance Order Storage) feature.
 
 = 1.0.1 2024-12-13 =
 * Improvement: Manually create user from order details.
@@ -66,6 +74,9 @@ Yes, you can disable the notification email by unchecking the "Send User Notific
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.2 2025-04-02 =
+* Improvements: upgrade safe, no breaking changes.
 
 = 1.0.1 2024-12-13 =
 * Improvements: upgrade safe, no breaking changes.

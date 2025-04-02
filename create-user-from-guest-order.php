@@ -12,25 +12,25 @@
  * Plugin Name:       Create User From Guest Order
  * Plugin URI:        https://github.com/s-azizkhan/create-user-from-guest-order-wp-plugin
  * Description:       Automatically creates a user from a guest order in WooCommerce.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Author:            <a href="https://github.com/s-azizkhan">Aziz Khan</a>, <a href="https://github.com/greguly">Gabriel Reguly</a>
  * Author URI:        https://github.com/s-azizkhan
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       create-user-from-guest-order
  * Requires Plugins:  woocommerce
- * 
+ *
  * WC requires at least: 5.0
- * WC tested up to: 9.4.3
- * 
+ * WC tested up to: 9.7.1
+ *
  */
 
 // If this file is called directly, abort.
-if (!defined('WPINC')) {
-    die;
+if (!defined("WPINC")) {
+    die();
 }
 
-define("CUFGO_VERSION", "1.0.1");
+define("CUFGO_VERSION", "1.0.2");
 
 class CUFGO_User_From_Guest_Order
 {
@@ -39,52 +39,84 @@ class CUFGO_User_From_Guest_Order
      */
     public function __construct()
     {
-        add_action('init', array($this, 'run'));
+        add_action("init", [$this, "run"]);
     }
 
     /**
      * Run all the attached hook
-     * 
+     *
      * @version 1.0.1
      */
     public function run()
     {
         // Add settings to the WooCommerce settings general tab for enable and disable the feature
-        add_filter('woocommerce_general_settings', array($this, 'createUserFromGuestOrderSettings'));
+        add_filter("woocommerce_general_settings", [
+            $this,
+            "createUserFromGuestOrderSettings",
+        ]);
 
         // Create user from guest order
-        add_action('woocommerce_new_order', array($this, 'createUserFromGuestOrder'), 10, 1);
+        add_action(
+            "woocommerce_new_order",
+            [$this, "createUserFromGuestOrder"],
+            10,
+            1
+        );
 
         // Create user from guest order when admin update the order
-        add_action('woocommerce_process_shop_order_meta', array($this, 'createUserFromGuestOrder'), 999, 1);
+        add_action(
+            "woocommerce_process_shop_order_meta",
+            [$this, "createUserFromGuestOrder"],
+            999,
+            1
+        );
         // Handle account past order mapping
-        add_action('user_register', array($this, 'linkPastOrdersToUser'), 10, 1); // @since 1.0.1
+        add_action("user_register", [$this, "linkPastOrdersToUser"], 10, 1); // @since 1.0.1
 
         // Maybe show a button to create an user.
-        add_action( 'woocommerce_admin_order_data_after_order_details', array( $this, 'maybeShowCreateUserButton' ) );
+        add_action("woocommerce_admin_order_data_after_order_details", [
+            $this,
+            "maybeShowCreateUserButton",
+        ]);
 
         // AJAX processing for user creation.
-        add_action( 'wp_ajax_cufgo_maybe_create_user', array( $this, 'maybeCreateUser') );
+        add_action("wp_ajax_cufgo_maybe_create_user", [
+            $this,
+            "maybeCreateUser",
+        ]);
 
         // Easy link to our settings page.
-        add_filter( 'plugin_action_links_create-user-from-guest-order-wp-plugin/create-user-from-guest-order.php', array( $this, 'pluginActionLinks' ) );
+        add_filter(
+            "plugin_action_links_create-user-from-guest-order-wp-plugin/create-user-from-guest-order.php",
+            [$this, "pluginActionLinks"]
+        );
 
+        // Support WooCommerce HPOC
+        add_action("before_woocommerce_init", [
+            $this,
+            "supportWooCommerceHpoc",
+        ]); // @since 1.0.2
     }
 
     /**
      * Add a link to our settings page at plugins listing page.
      * @param  array $links
      * @return array
-     * 
+     *
      * @since 1.0.1
      */
-    public function pluginActionLinks( $links ) {
+    public function pluginActionLinks($links)
+    {
+        $plugin_links = [
+            '<a href="' .
+            admin_url("admin.php?page=wc-settings") .
+            '">' .
+            esc_html__("Settings", "create-user-from-guest-order") .
+            "</a>",
+        ];
 
-        $plugin_links = array( '<a href="' .  admin_url( 'admin.php?page=wc-settings' ) . '">' . esc_html__( 'Settings', 'create-user-from-guest-order' ) . '</a>' );
-
-        return array_merge( $plugin_links, $links );
+        return array_merge($plugin_links, $links);
     }
-
 
     /**
      * Show create user button if order customer does not exist.
@@ -92,59 +124,89 @@ class CUFGO_User_From_Guest_Order
      * @param WC_Order $order
      * @since 1.0.1
      */
-    public function maybeShowCreateUserButton( $order ) {
-
-        if ( self::isFeatureEnabled() ) {
-
+    public function maybeShowCreateUserButton($order)
+    {
+        if (self::isFeatureEnabled()) {
             $customer_id = $order->get_customer_id();
-            $user        = get_user_by( 'id', $customer_id );
-            if ( ! $user ) {
-
-                printf( '<p class="form-field form-field-wide" ><a href="%s" class="button woocommerce_order_action_create_user">%s</a></p>',
-                        wp_nonce_url( admin_url( 'admin-ajax.php?action=cufgo_maybe_create_user&order_id=' . $order->get_id()  ), 'create_user_action' ),
-                        esc_html__( 'Create user from order details.', 'create-user-from-guest-order' ) );
-
-
+            $user = get_user_by("id", $customer_id);
+            if (!$user) {
+                printf(
+                    '<p class="form-field form-field-wide" ><a href="%s" class="button woocommerce_order_action_create_user">%s</a></p>',
+                    wp_nonce_url(
+                        admin_url(
+                            "admin-ajax.php?action=cufgo_maybe_create_user&order_id=" .
+                                $order->get_id()
+                        ),
+                        "create_user_action"
+                    ),
+                    esc_html__(
+                        "Create user from order details.",
+                        "create-user-from-guest-order"
+                    )
+                );
             }
         }
     }
 
     /**
      * Maybe create user.
-     * 
+     *
      * @since 1.0.1
      */
-    public function maybeCreateUser() {
-
-        if ( ! is_admin() ) {
-            wp_die( esc_html__('Error. Not at admin panel.', 'create-user-from-guest-order' ) );
+    public function maybeCreateUser()
+    {
+        if (!is_admin()) {
+            wp_die(
+                esc_html__(
+                    "Error. Not at admin panel.",
+                    "create-user-from-guest-order"
+                )
+            );
         }
 
-        if ( ! current_user_can( 'edit_shop_orders' ) ) {
-            wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'create-user-from-guest-order' ) );
+        if (!current_user_can("edit_shop_orders")) {
+            wp_die(
+                esc_html__(
+                    "You do not have sufficient permissions to access this page.",
+                    "create-user-from-guest-order"
+                )
+            );
         }
 
-        if ( ! check_admin_referer( 'create_user_action' ) ) {
-            wp_die( esc_html__( 'You have taken too long. Please go back and retry.', 'create-user-from-guest-order' ) );
+        if (!check_admin_referer("create_user_action")) {
+            wp_die(
+                esc_html__(
+                    "You have taken too long. Please go back and retry.",
+                    "create-user-from-guest-order"
+                )
+            );
         }
 
-        $order_id = isset( $_GET['order_id'] ) && (int) $_GET['order_id'] ? (int) $_GET['order_id'] : '';
-        if ( ! $order_id ) {
-            wp_die( esc_html__( 'Empty order id.', 'create-user-from-guest-order' ) );
+        $order_id =
+            isset($_GET["order_id"]) && (int) $_GET["order_id"]
+                ? (int) $_GET["order_id"]
+                : "";
+        if (!$order_id) {
+            wp_die(
+                esc_html__("Empty order id.", "create-user-from-guest-order")
+            );
         }
 
-        $order = wc_get_order( $order_id );
-        if ( ! $order ) {
-            wp_die( esc_html__( 'Could not load order.', 'create-user-from-guest-order' ) );    
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            wp_die(
+                esc_html__(
+                    "Could not load order.",
+                    "create-user-from-guest-order"
+                )
+            );
         }
 
-        self::createUser( $order );
+        self::createUser($order);
 
-        wp_redirect( wp_get_referer() );
-        exit;
+        wp_redirect(wp_get_referer());
+        exit();
     }
-
-
 
     /**
      * Check if the feature to create a user from a guest order is enabled.
@@ -153,7 +215,7 @@ class CUFGO_User_From_Guest_Order
      */
     public static function isFeatureEnabled(): bool
     {
-        return get_option('cufgo_enable') == 'yes' ? true : false;
+        return get_option("cufgo_enable") == "yes" ? true : false;
     }
 
     /**
@@ -163,7 +225,9 @@ class CUFGO_User_From_Guest_Order
      */
     public static function isNotificationEnabled(): bool
     {
-        return get_option('cufgo_send_user_notification_email') == 'yes' ? true : false;
+        return get_option("cufgo_send_user_notification_email") == "yes"
+            ? true
+            : false;
     }
 
     /**
@@ -176,39 +240,57 @@ class CUFGO_User_From_Guest_Order
     public function createUserFromGuestOrderSettings($settings)
     {
         // check for permission
-        if(!current_user_can('manage_woocommerce')) {
+        if (!current_user_can("manage_woocommerce")) {
             return $settings;
         }
 
-        $settings[] = array(
-            'title' => __('Create User From Guest Order', 'create-user-from-guest-order'),
-            'desc' => __('Map existing user to guest order or Create new user while creating/updating guest order, ( Billing email used in validation ) imp: This will work when order created by Admin', 'create-user-from-guest-order'),
-            'type' => 'title',
-            'id' => 'cufgo_settings',
-        );
+        $settings[] = [
+            "title" => __(
+                "Create User From Guest Order",
+                "create-user-from-guest-order"
+            ),
+            "desc" => __(
+                "Map existing user to guest order or Create new user while creating/updating guest order, ( Billing email used in validation ) imp: This will work when order created by Admin",
+                "create-user-from-guest-order"
+            ),
+            "type" => "title",
+            "id" => "cufgo_settings",
+        ];
 
         // Enable the feature checkbox
-        $settings[] = array(
-            'title' => __('Enable Create User From Guest Order', 'create-user-from-guest-order'),
-            'desc' => __('Check this to enable user creation on guest order', 'create-user-from-guest-order'),
-            'id' => 'cufgo_enable',
-            'type' => 'checkbox',
-            'default' => 'no',
-        );
+        $settings[] = [
+            "title" => __(
+                "Enable Create User From Guest Order",
+                "create-user-from-guest-order"
+            ),
+            "desc" => __(
+                "Check this to enable user creation on guest order",
+                "create-user-from-guest-order"
+            ),
+            "id" => "cufgo_enable",
+            "type" => "checkbox",
+            "default" => "no",
+        ];
 
         // Send User Notification Email when user is created checkbox
-        $settings[] = array(
-            'title' => __('Send User Notification Email when user is created', 'create-user-from-guest-order'),
-            'desc' => __('Check this to send user notification email when user is created', 'create-user-from-guest-order'),
-            'id' => 'cufgo_send_user_notification_email',
-            'type' => 'checkbox',
-            'default' => 'no',
-        );
+        $settings[] = [
+            "title" => __(
+                "Send User Notification Email when user is created",
+                "create-user-from-guest-order"
+            ),
+            "desc" => __(
+                "Check this to send user notification email when user is created",
+                "create-user-from-guest-order"
+            ),
+            "id" => "cufgo_send_user_notification_email",
+            "type" => "checkbox",
+            "default" => "no",
+        ];
 
-        $settings[] = array(
-            'type' => 'sectionend',
-            'id' => 'cufgo_settings',
-        );
+        $settings[] = [
+            "type" => "sectionend",
+            "id" => "cufgo_settings",
+        ];
         return $settings;
     }
 
@@ -252,7 +334,7 @@ class CUFGO_User_From_Guest_Order
         }
 
         // Find if user exists with the email
-        $user = get_user_by('email', $billing_email);
+        $user = get_user_by("email", $billing_email);
         // If user exists, then we don't need to create a new user just update the customer ID
         if ($user) {
             $order->set_customer_id($user->ID);
@@ -262,23 +344,47 @@ class CUFGO_User_From_Guest_Order
             $customer = new WC_Customer();
 
             // Set location for billing
-            $customer->set_billing_location($order->get_billing_country() ?? '', $order->get_billing_state() ?? '', $order->get_billing_postcode() ?? '', $order->get_billing_city() ?? '');
+            $customer->set_billing_location(
+                $order->get_billing_country() ?? "",
+                $order->get_billing_state() ?? "",
+                $order->get_billing_postcode() ?? "",
+                $order->get_billing_city() ?? ""
+            );
             $customer->set_email($billing_email);
-            $customer->set_first_name($order->get_billing_first_name() ?? '');
-            $customer->set_last_name($order->get_billing_last_name() ?? '');
-            $customer->set_billing_company($order->get_billing_company() ?? '');
-            $customer->set_billing_address($order->get_billing_address_1() ?? '');
-            $customer->set_billing_address_2($order->get_billing_address_2() ?? '');
-            $customer->set_billing_phone($order->get_billing_phone() ?? '');
+            $customer->set_first_name($order->get_billing_first_name() ?? "");
+            $customer->set_last_name($order->get_billing_last_name() ?? "");
+            $customer->set_billing_company($order->get_billing_company() ?? "");
+            $customer->set_billing_address(
+                $order->get_billing_address_1() ?? ""
+            );
+            $customer->set_billing_address_2(
+                $order->get_billing_address_2() ?? ""
+            );
+            $customer->set_billing_phone($order->get_billing_phone() ?? "");
 
             // Set location & address for shipping
-            $customer->set_shipping_location($order->get_shipping_country() ?? '', $order->get_shipping_state() ?? '', $order->get_shipping_postcode() ?? '', $order->get_shipping_city() ?? '');
-            $customer->set_shipping_first_name($order->get_shipping_first_name() ?? '');
-            $customer->set_shipping_last_name($order->get_shipping_last_name() ?? '');
-            $customer->set_shipping_company($order->get_shipping_company() ?? '');
-            $customer->set_shipping_address_1($order->get_shipping_address_1() ?? '');
-            $customer->set_shipping_address_2($order->get_shipping_address_2() ?? '');
-            $customer->set_shipping_phone($order->get_shipping_phone() ?? '');
+            $customer->set_shipping_location(
+                $order->get_shipping_country() ?? "",
+                $order->get_shipping_state() ?? "",
+                $order->get_shipping_postcode() ?? "",
+                $order->get_shipping_city() ?? ""
+            );
+            $customer->set_shipping_first_name(
+                $order->get_shipping_first_name() ?? ""
+            );
+            $customer->set_shipping_last_name(
+                $order->get_shipping_last_name() ?? ""
+            );
+            $customer->set_shipping_company(
+                $order->get_shipping_company() ?? ""
+            );
+            $customer->set_shipping_address_1(
+                $order->get_shipping_address_1() ?? ""
+            );
+            $customer->set_shipping_address_2(
+                $order->get_shipping_address_2() ?? ""
+            );
+            $customer->set_shipping_phone($order->get_shipping_phone() ?? "");
 
             // Generate Password
             $customer->set_password(wp_generate_password());
@@ -287,7 +393,7 @@ class CUFGO_User_From_Guest_Order
 
             // Send User Notification
             if (self::isNotificationEnabled()) {
-                wp_new_user_notification($customer_id, null, 'both');
+                wp_new_user_notification($customer_id, null, "both");
             }
 
             // update order
@@ -304,49 +410,98 @@ class CUFGO_User_From_Guest_Order
      */
     public function linkPastOrdersToUser($user_id)
     {
-        // Get user data
-        $user = get_userdata($user_id);
-        if (!$user) {
-            return;
-        }
+        try {
+            // Get user data
+            $user = get_userdata($user_id);
+            if (!$user) {
+                return;
+            }
 
-        // Get user email
-        $user_email = $user->user_email;
+            // Get user email
+            $user_email = $user->user_email;
 
-        // Query for guest orders with matching email
-        $args = array(
-            'post_type' => 'shop_order',
-            'post_status' => array_keys(wc_get_order_statuses()),
-            'meta_query' => array(
-                array(
-                    'key' => '_billing_email',
-                    'value' => $user_email,
-                    'compare' => '='
-                ),
-                array(
-                    'key' => '_customer_user',
-                    'value' => 0, // Guest orders
-                    'compare' => '='
-                )
-            )
-        );
+            // check is HPOC feature is Enabled do with new way
+            if (!$this->isHpocEnabled()) {
+                $orders = wc_get_orders([
+                    "status" => array_keys(wc_get_order_statuses()),
+                    "billing_email" => $user_email,
+                    "customer_id" => 0, // customer id 0 mean it's a guest order
+                ]);
 
-        $query = new WP_Query($args);
-
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-
-                $order_id = get_the_ID();
-                $order = wc_get_order($order_id);
-
-                if ($order) {
-                    // Link order to user
+                foreach ($orders as $order) {
                     $order->set_customer_id($user_id);
                     $order->save();
                 }
+            } else {
+                // Process with tradioal way
+                // Query for guest orders with matching email
+                $args = [
+                    "post_type" => "shop_order",
+                    "post_status" => array_keys(wc_get_order_statuses()),
+                    "meta_query" => [
+                        [
+                            "key" => "_billing_email",
+                            "value" => $user_email,
+                            "compare" => "=",
+                        ],
+                        [
+                            "key" => "_customer_user",
+                            "value" => 0, // Guest orders
+                            "compare" => "=",
+                        ],
+                    ],
+                ];
+
+                $query = new WP_Query($args);
+
+                if ($query->have_posts()) {
+                    while ($query->have_posts()) {
+                        $query->the_post();
+
+                        $order_id = get_the_ID();
+                        $order = wc_get_order($order_id);
+
+                        if ($order) {
+                            // Link order to user
+                            $order->set_customer_id($user_id);
+                            $order->save();
+                        }
+                    }
+                    wp_reset_postdata();
+                }
             }
-            wp_reset_postdata();
+            return;
+        } catch (Throwable $e) {
+            error_log("Error while linkPastOrdersToUser: " . $e->getMessage());
+            return;
+        }
+    }
+
+    /**
+     * Check if WooCommerce HPOC is enabled
+     *
+     * @since 1.0.2
+     */
+    private function isHpocEnabled()
+    {
+        return class_exists(
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::class
+        );
+    }
+
+    /**
+     * Add support to WooCommerce HPOC
+     *
+     * @since 1.0.2
+     */
+    public function supportWooCommerceHpoc()
+    {
+        if ($this->isHpocEnabled()) {
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+                "custom_order_tables",
+                __FILE__,
+                true
+            );
         }
     }
 
@@ -355,13 +510,16 @@ class CUFGO_User_From_Guest_Order
      */
     public static function deactivate()
     {
-        delete_option('cufgo_send_user_notification_email');
-        delete_option('cufgo_enable');
-        delete_option('cufgo_settings');
+        delete_option("cufgo_send_user_notification_email");
+        delete_option("cufgo_enable");
+        delete_option("cufgo_settings");
     }
 }
 
-register_deactivation_hook(__FILE__, array(CUFGO_User_From_Guest_Order::class, 'deactivate'));
+register_deactivation_hook(__FILE__, [
+    CUFGO_User_From_Guest_Order::class,
+    "deactivate",
+]);
 
 /**
  * Begins execution of the plugin.
@@ -375,7 +533,7 @@ register_deactivation_hook(__FILE__, array(CUFGO_User_From_Guest_Order::class, '
 function cufgo_init()
 {
     // Initialize the plugin
-    if (class_exists('CUFGO_User_From_Guest_Order')) {
+    if (class_exists("CUFGO_User_From_Guest_Order")) {
         new CUFGO_User_From_Guest_Order();
     }
 }
